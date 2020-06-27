@@ -33,5 +33,7 @@ func main() {
     config := topic_controller.KafkaConfig{Brokers: "my-kafka-broker:9092"}
     controller, _ := topic_controller.New(config)
     controller.Create(Topic{Name: "topic", Partitions: 1, ReplicationFactor: 1})
+    controller.Upadate("topic", 3)
+    controller.Delete("topic")
 }
 ```
