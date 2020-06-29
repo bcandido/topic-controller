@@ -37,6 +37,21 @@ func parseDuration(duration string) time.Duration {
 	return maxDur
 }
 
+func (c topicController) GetAllTopics() []Topic {
+	maxDur := parseDuration("60s")
+	results, err := c.client.GetMetadata(nil, true, int(maxDur.Milliseconds()))
+
+	if err != nil {
+		return nil
+	}
+
+	var topics []Topic
+	for _, topic := range results.Topics {
+		topics = append(topics, Topic{Name: topic.Topic, Partitions: len(topic.Partitions), ReplicationFactor: len(topic.Partitions[0].Replicas)})
+	}
+	return topics
+}
+
 func (c topicController) Create(topic Topic) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

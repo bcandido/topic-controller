@@ -6,6 +6,8 @@ type (
 	}
 
 	TopicControllerAPI interface {
+		GetAllTopics() []Topic
+
 		// Creates a new topic into a kafka broker
 		Create(topic Topic) error
 

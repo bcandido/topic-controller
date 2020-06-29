@@ -1,6 +1,7 @@
 package topic_controller
 
 import (
+	"fmt"
 	"github.com/google/bcandido/do-order/rand"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -58,7 +59,7 @@ func TestFailCreatingTopicWithSameName(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestDecreaseNumberOfPartitionsForATopic(t *testing.T)  {
+func TestDecreaseNumberOfPartitionsForATopic(t *testing.T) {
 	topicName := rand.String(30)
 	c := getTestedController(t)
 
@@ -69,7 +70,7 @@ func TestDecreaseNumberOfPartitionsForATopic(t *testing.T)  {
 	assert.NotNil(t, err)
 }
 
-func TestIncreaseNumberOfPartitionsForATopic(t *testing.T)  {
+func TestIncreaseNumberOfPartitionsForATopic(t *testing.T) {
 	topicName := rand.String(30)
 	c := getTestedController(t)
 
@@ -80,7 +81,7 @@ func TestIncreaseNumberOfPartitionsForATopic(t *testing.T)  {
 	assert.Nil(t, err)
 }
 
-func TestCreateAndDeleteTopic(t *testing.T)  {
+func TestCreateAndDeleteTopic(t *testing.T) {
 	topicName := rand.String(30)
 	c := getTestedController(t)
 
@@ -89,4 +90,12 @@ func TestCreateAndDeleteTopic(t *testing.T)  {
 
 	err := c.Delete(topic.Name)
 	assert.Nil(t, err)
+}
+
+func TestGetAllTopics(t *testing.T) {
+	c := getTestedController(t)
+	topics := c.GetAllTopics()
+	for _, t := range topics {
+		fmt.Printf("%v:%v:%v\n", t.Name, t.Partitions, t.ReplicationFactor)
+	}
 }
