@@ -1,4 +1,4 @@
-module github.com/google/bcandido/do-order
+module github.com/bcandido/topic-controller
 
 go 1.14
 

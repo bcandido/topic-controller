@@ -2,7 +2,7 @@ package topic_controller
 
 import (
 	"fmt"
-	"github.com/google/bcandido/do-order/rand"
+	"github.com/bcandido/topic-controller/rand"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
