@@ -9,8 +9,8 @@ import (
 
 func getTestedController(t *testing.T) TopicControllerAPI {
 	config := KafkaConfig{Brokers: "0.0.0.0:19092,0.0.0.0:29092,0.0.0.0:39092"}
-	c, err := New(config)
-	assert.Nil(t, err)
+	c := New(config)
+	assert.NotNil(t, c)
 	return c
 }
 

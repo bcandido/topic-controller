@@ -13,12 +13,12 @@ type topicController struct {
 	client *kafka.AdminClient
 }
 
-func New(config KafkaConfig) (TopicControllerAPI, error) {
+func New(config KafkaConfig) TopicControllerAPI {
 	adminClient, err := newClient(config)
 	if err != nil {
-		return nil, err
+		return nil
 	}
-	return topicController{client: adminClient}, nil
+	return topicController{client: adminClient}
 }
 
 func newClient(config KafkaConfig) (*kafka.AdminClient, error) {
