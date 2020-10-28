@@ -92,10 +92,24 @@ func TestCreateAndDeleteTopic(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+//func TestGetTopics(t *testing.T) {
+//	c := getTestedController(t)
+//	topic := Topic{Name: "test", Partitions: 1, ReplicationFactor: 1}
+//	expectedTopic := c.Create(topic)
+//	resultTopic := c.Get(expectedTopic.Name)
+//	assert.NotNil(t, resultTopic)
+//}
+
 func TestGetAllTopics(t *testing.T) {
 	c := getTestedController(t)
-	topics := c.GetAllTopics()
+	topics := c.GetAll()
 	for _, t := range topics {
 		fmt.Printf("%v:%v:%v\n", t.Name, t.Partitions, t.ReplicationFactor)
 	}
+}
+
+
+func TestConnect(t *testing.T) {
+	c := getTestedController(t)
+	assert.Nil(t, c.Connect())
 }

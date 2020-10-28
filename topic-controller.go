@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+const (
+	BootstrapServersConfig = "bootstrap.servers"
+)
+
 type topicController struct {
 	client *kafka.AdminClient
 }
@@ -22,7 +26,9 @@ func New(config KafkaConfig) TopicControllerAPI {
 }
 
 func newClient(config KafkaConfig) (*kafka.AdminClient, error) {
-	adminClient, err := kafka.NewAdminClient(&kafka.ConfigMap{"bootstrap.servers": config.Brokers})
+	adminClient, err := kafka.NewAdminClient(&kafka.ConfigMap{
+		BootstrapServersConfig: config.Brokers,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating new kafka admin client: %w", err)
 	}
@@ -37,9 +43,27 @@ func parseDuration(duration string) time.Duration {
 	return maxDur
 }
 
-func (c topicController) GetAllTopics() []Topic {
-	maxDur := parseDuration("60s")
-	results, err := c.client.GetMetadata(nil, true, int(maxDur.Milliseconds()))
+func (c topicController) Connect() error {
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
+
+	configs, err := c.client.DescribeConfigs(ctx, []kafka.ConfigResource{{Type: kafka.ResourceBroker, Name: "1"}})
+	if err != nil {
+		err = fmt.Errorf("Could not connect to kafka cluster: %v", err)
+	}
+
+	log.Printf("Broker configuration: %v", configs)
+
+	return err
+}
+
+func (c topicController) Get(name string, timeout time.Duration) *Topic {
+	if timeout == nil {
+		maxDur := parseDuration("5s")
+	}
+	
+	
+	results, err := c.client.GetMetadata(&name, false, int(maxDur.Milliseconds()))
 
 	if err != nil {
 		return nil
@@ -47,7 +71,32 @@ func (c topicController) GetAllTopics() []Topic {
 
 	var topics []Topic
 	for _, topic := range results.Topics {
+		if topic.Error.Code() != kafka.ErrNoError {
+			// could not get topic metatada
+			return nil
+		}
 		topics = append(topics, Topic{Name: topic.Topic, Partitions: len(topic.Partitions), ReplicationFactor: len(topic.Partitions[0].Replicas)})
+	}
+
+	if len(topics) == 1 {
+		return &topics[0]
+	} else {
+		return nil
+	}
+}
+
+
+func (c topicController) GetAll() []*Topic {
+	maxDur := parseDuration("10s")
+	results, err := c.client.GetMetadata(nil, true, int(maxDur.Milliseconds()))
+
+	if err != nil {
+		return nil
+	}
+
+	var topics []*Topic
+	for _, topic := range results.Topics {
+		topics = append(topics, &Topic{Name: topic.Topic, Partitions: len(topic.Partitions), ReplicationFactor: len(topic.Partitions[0].Replicas)})
 	}
 	return topics
 }
@@ -83,7 +132,7 @@ func (c topicController) Update(name string, partitions int) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	maxDur := parseDuration("60s")
+	maxDur := parseDuration("5s")
 	results, err := c.client.CreatePartitions(ctx, []kafka.PartitionsSpecification{{
 		Topic:      name,
 		IncreaseTo: partitions,
@@ -105,7 +154,7 @@ func (c topicController) Delete(name string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	maxDur := parseDuration("60s")
+	maxDur := parseDuration("5s")
 	results, err := c.client.DeleteTopics(
 		ctx,
 		[]string{name},
@@ -119,7 +168,7 @@ func (c topicController) Delete(name string) error {
 		if result.Error.Code() != kafka.ErrorCode(0) {
 			return fmt.Errorf("error deleting topic %s: %w", result.Topic, result.Error)
 		}
-		log.Printf("topic created: %s\n", result.Topic)
+		log.Printf("topic deleted: %s\n", result.Topic)
 	}
 
 	return nil

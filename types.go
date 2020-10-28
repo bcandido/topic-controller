@@ -6,7 +6,10 @@ type (
 	}
 
 	TopicControllerAPI interface {
-		GetAllTopics() []Topic
+		Connect() error
+
+		Get(name string) *Topic
+		GetAll() []*Topic
 
 		// Creates a new topic into a kafka broker
 		Create(topic Topic) error

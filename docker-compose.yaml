@@ -1,7 +1,7 @@
 version: '2'
 services:
   zookeeper-1:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:5.3.4
     hostname: zookeeper-1
     ports:
       - "12181:12181"
@@ -14,7 +14,7 @@ services:
       ZOOKEEPER_SERVERS: zookeeper-1:12888:13888;zookeeper-2:22888:23888;zookeeper-3:32888:33888
 
   zookeeper-2:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:5.3.4
     hostname: zookeeper-2
     ports:
       - "22181:22181"
@@ -27,7 +27,7 @@ services:
       ZOOKEEPER_SERVERS: zookeeper-1:12888:13888;zookeeper-2:22888:23888;zookeeper-3:32888:33888
 
   zookeeper-3:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:5.3.4
     hostname: zookeeper-3
     ports:
       - "32181:32181"
@@ -40,7 +40,7 @@ services:
       ZOOKEEPER_SERVERS: zookeeper-1:12888:13888;zookeeper-2:22888:23888;zookeeper-3:32888:33888
 
   kafka-1:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:5.3.4
     hostname: kafka-1
     ports:
       - "19092:19092"
@@ -54,7 +54,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:19092
 
   kafka-2:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:5.3.4
     hostname: kafka-2
     ports:
       - "29092:29092"
@@ -62,13 +62,14 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
+      - kafka-1
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:12181,zookeeper-2:12181,zookeeper-3:12181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:29092
 
   kafka-3:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:5.3.4
     hostname: kafka-3
     ports:
       - "39092:39092"
@@ -76,6 +77,8 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
+      - kafka-1
+      - kafka-2
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:12181,zookeeper-2:12181,zookeeper-3:12181
@@ -92,6 +95,10 @@ services:
                 bootstrap.servers: "kafka-1:19092,kafka-2:29092,kafka-3:39092"
     ports:
       - 8080:8080
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
     links:
       - kafka-1
       - kafka-2
