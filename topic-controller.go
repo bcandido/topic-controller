@@ -35,21 +35,13 @@ func newClient(config KafkaConfig) (*kafka.AdminClient, error) {
 	return adminClient, nil
 }
 
-func parseDuration(duration string) time.Duration {
-	maxDur, err := time.ParseDuration(duration)
-	if err != nil {
-		panic("Duration string could not be parsed")
-	}
-	return maxDur
-}
-
 func (c topicController) Connect() error {
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 
 	configs, err := c.client.DescribeConfigs(ctx, []kafka.ConfigResource{{Type: kafka.ResourceBroker, Name: "1"}})
 	if err != nil {
-		err = fmt.Errorf("Could not connect to kafka cluster: %v", err)
+		err = fmt.Errorf("could not connect to kafka cluster: %w", err)
 	}
 
 	log.Printf("Broker configuration: %v", configs)
@@ -57,13 +49,9 @@ func (c topicController) Connect() error {
 	return err
 }
 
-func (c topicController) Get(name string, timeout time.Duration) *Topic {
-	if timeout == nil {
-		maxDur := parseDuration("5s")
-	}
-	
-	
-	results, err := c.client.GetMetadata(&name, false, int(maxDur.Milliseconds()))
+func (c topicController) Get(name string) *Topic {
+	timeout := 5 * time.Second
+	results, err := c.client.GetMetadata(&name, false, int(timeout.Milliseconds()))
 
 	if err != nil {
 		return nil
@@ -85,9 +73,8 @@ func (c topicController) Get(name string, timeout time.Duration) *Topic {
 	}
 }
 
-
 func (c topicController) GetAll() []*Topic {
-	maxDur := parseDuration("10s")
+	maxDur := 10 * time.Second
 	results, err := c.client.GetMetadata(nil, true, int(maxDur.Milliseconds()))
 
 	if err != nil {
@@ -105,7 +92,7 @@ func (c topicController) Create(topic Topic) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	maxDur := parseDuration("60s")
+	maxDur := 1 * time.Minute
 	results, err := c.client.CreateTopics(
 		ctx,
 		[]kafka.TopicSpecification{{
@@ -132,7 +119,7 @@ func (c topicController) Update(name string, partitions int) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	maxDur := parseDuration("5s")
+	maxDur := 5 * time.Second
 	results, err := c.client.CreatePartitions(ctx, []kafka.PartitionsSpecification{{
 		Topic:      name,
 		IncreaseTo: partitions,
@@ -154,7 +141,7 @@ func (c topicController) Delete(name string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	maxDur := parseDuration("5s")
+	maxDur := 5 * time.Second
 	results, err := c.client.DeleteTopics(
 		ctx,
 		[]string{name},
